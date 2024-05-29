@@ -56,8 +56,6 @@ export function AddNewLocationModal({
 
   function updateArea(e, map) {
     if (e?.features?.length) {
-      console.log(map);
-      console.log(drawControl.getSelected());
       const buffer = turf.buffer(e.features[0], 200, { units: 'meters' });
       const differ = turf.difference(buffer, e.features[0]);
       setBufferPolygon(() => [differ]);
@@ -79,7 +77,11 @@ export function AddNewLocationModal({
         });
       }
     }
-    if (drawControl?.getAll()?.features?.length) {
+    console.log(drawControl.getAll());
+    if (
+      drawControl?.getAll()?.features?.length &&
+      drawControl?.getAll().features[0].geometry.coordinates[0].length > 2
+    ) {
       const isPolygons = drawControl
         .getAll()
         .features.every((feature) => feature.geometry.type === 'Polygon');
@@ -192,15 +194,6 @@ export function AddNewLocationModal({
   }
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      ({ coords: { latitude, longitude } }) => {
-        setUserLocation(() => ({ latitude, longitude }));
-      },
-      (err) => {
-        console.log(err);
-      }
-    );
-
     if (isAddOpen || isEditOpen) {
       mapboxgl.accessToken = map_token;
       map.current = new mapboxgl.Map({
@@ -212,7 +205,26 @@ export function AddNewLocationModal({
       map.current.addControl(drawControl, 'top-left');
       map.current.addControl(geoControl, 'top-right');
       map.current.addControl(navigateControl, 'top-right');
+      if (isAddOpen) {
+        navigator.geolocation.getCurrentPosition(
+          ({ coords: { latitude, longitude } }) => {
+            setUserLocation(() => ({ latitude, longitude }));
+          },
+          (err) => {
+            console.log(err);
+          }
+        );
+      }
+
       if (isEditOpen) {
+        if (map.current) {
+          const bbox = turf.bbox(data.polygon[0]);
+          map.current.fitBounds(bbox, {
+            padding: 100,
+            animate: false,
+          });
+        }
+
         setPolygon(data.polygon);
         setIsValidPolygon(true);
         setMapMessage(SUCCESS_ACCEPT_MSG);
