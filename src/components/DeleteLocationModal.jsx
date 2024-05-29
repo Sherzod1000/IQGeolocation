@@ -1,10 +1,10 @@
-import { Message, Modal, Span } from '@iqueue/ui-kit';
-import { useContext } from 'react';
-import { LocationContext } from '../context/locationContext.jsx';
-import { ERROR_DELETE_MSG, SUCCESS_DELETE_MSG } from './helper/constants.js';
+import {Message, Modal, Span} from '@iqueue/ui-kit';
+import {useContext} from 'react';
+import {LocationContext} from '../context/locationContext.jsx';
+import {ERROR_DELETE_MSG, SUCCESS_DELETE_MSG} from './helper/constants.js';
 
-export function DeleteLocationModal({ id, isOpen, setIsOpen }) {
-  const { locations, setLocations } = useContext(LocationContext);
+export function DeleteLocationModal({id, isOpen, setIsOpen}) {
+  const {locations, setLocations} = useContext(LocationContext);
 
   async function handleDeleteLocation() {
     const cancelLoading = Message({
@@ -54,7 +54,6 @@ export function DeleteLocationModal({ id, isOpen, setIsOpen }) {
   return (
     <>
       <Modal
-        className={'pb-4'}
         isOpened={isOpen}
         onClose={() => setIsOpen(false)}
         footerActions={[

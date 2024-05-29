@@ -1,14 +1,9 @@
-import { Input, Message, Modal } from '@iqueue/ui-kit';
+import {Input, Message, Modal} from '@iqueue/ui-kit';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import * as turf from '@turf/turf';
-import { useContext, useEffect, useRef, useState } from 'react';
-import {
-  INITIAL_MAP_MSG,
-  isForcedSubmitUsed,
-  map_token,
-  SUCCESS_ACCEPT_MSG,
-} from './helper/constants.js';
+import {useContext, useEffect, useRef, useState} from 'react';
+import {INITIAL_MAP_MSG, isForcedSubmitUsed, map_token, SUCCESS_ACCEPT_MSG,} from './helper/constants.js';
 import {
   calculateCentroid,
   checkLocationsExist,
@@ -18,13 +13,13 @@ import {
   validateEmptySpaces,
 } from './helper/functions.js';
 import axios from 'axios';
-import { LocationContext } from '../context/locationContext.jsx';
+import {LocationContext} from '../context/locationContext.jsx';
 
 export function AddNewLocationModal({
-  isAdd: { isOpen: isAddOpen, setIsOpen: setAddIsOpen },
-  isEdit: { isOpen: isEditOpen, setIsOpen: setEditIsOpen, data },
-}) {
-  const { locations, setLocations } = useContext(LocationContext);
+                                      isAdd: {isOpen: isAddOpen, setIsOpen: setAddIsOpen},
+                                      isEdit: {isOpen: isEditOpen, setIsOpen: setEditIsOpen, data},
+                                    }) {
+  const {locations, setLocations} = useContext(LocationContext);
   const mapContainer = useRef(null);
   const locationRef = useRef(null);
   const submitRef = useRef(null);
@@ -40,7 +35,11 @@ export function AddNewLocationModal({
   const [bufferPolygon, setBufferPolygon] = useState([]);
   const map = useRef(null);
   const drawControl = new MapboxDraw({
-    displayControlsDefault: true,
+    displayControlsDefault: false,
+    controls: {
+      polygon: true,
+      trash: true
+    }
   });
   const geoControl = new mapboxgl.GeolocateControl();
   const navigateControl = new mapboxgl.NavigationControl();
@@ -54,30 +53,39 @@ export function AddNewLocationModal({
     }
   });
 
-  function updateArea(e, map) {
-    if (e?.features?.length) {
-      const buffer = turf.buffer(e.features[0], 200, { units: 'meters' });
-      const differ = turf.difference(buffer, e.features[0]);
-      setBufferPolygon(() => [differ]);
-      if (map.current.getSource('buffer')) {
-        map.current.getSource('buffer').setData(differ);
-      } else {
-        map.current.addSource('buffer', {
-          type: 'geojson',
-          data: differ,
-        });
-        map.current.addLayer({
-          id: 'buffer',
-          type: 'fill',
-          source: 'buffer',
-          paint: {
-            'fill-color': '#f00',
-            'fill-opacity': 0.2,
-          },
-        });
+  function updateArea(e, map, isDelete) {
+    console.log(e);
+    if (e.type === 'draw.delete') {
+      setBufferPolygon([]);
+      setPolygon([]);
+      setMapMessage(INITIAL_MAP_MSG);
+      if (map.current) {
+        console.log("Remove buffer", map.current);
+        map.current.removeLayer('buffer');
       }
     }
-    console.log(drawControl.getAll());
+    const buffer = turf.buffer(drawControl.getAll().features[0], 200, {
+      units: 'meters',
+    });
+    const differ = turf.difference(buffer, drawControl.getAll().features[0]);
+    setBufferPolygon(() => [differ]);
+    if (map.current.getSource('buffer')) {
+      map.current.getSource('buffer').setData(differ);
+    } else {
+      map.current.addSource('buffer', {
+        type: 'geojson',
+        data: differ,
+      });
+      map.current.addLayer({
+        id: 'buffer',
+        type: 'fill',
+        source: 'buffer',
+        paint: {
+          'fill-color': '#f00',
+          'fill-opacity': 0.2,
+        },
+      });
+    }
     if (
       drawControl?.getAll()?.features?.length &&
       drawControl?.getAll().features[0].geometry.coordinates[0].length > 2
@@ -85,7 +93,6 @@ export function AddNewLocationModal({
       const isPolygons = drawControl
         .getAll()
         .features.every((feature) => feature.geometry.type === 'Polygon');
-      console.log(drawControl.getAll());
       if (isPolygons) {
         setIsValidPolygon(true);
         setMapMessage(SUCCESS_ACCEPT_MSG);
@@ -154,7 +161,7 @@ export function AddNewLocationModal({
       });
 
       if (isEditOpen) {
-        const foundObject = locations.find(({ id }) => id === data.id);
+        const foundObject = locations.find(({id}) => id === data.id);
         foundObject.location_name = locationRef.current.value;
         foundObject.country =
           responseGeoDecode.data.features.at(-1).text || 'Unknown';
@@ -207,8 +214,8 @@ export function AddNewLocationModal({
       map.current.addControl(navigateControl, 'top-right');
       if (isAddOpen) {
         navigator.geolocation.getCurrentPosition(
-          ({ coords: { latitude, longitude } }) => {
-            setUserLocation(() => ({ latitude, longitude }));
+          ({coords: {latitude, longitude}}) => {
+            setUserLocation(() => ({latitude, longitude}));
           },
           (err) => {
             console.log(err);
@@ -235,26 +242,24 @@ export function AddNewLocationModal({
             data: data.polygon?.[0],
           });
 
-          // Add a layer to render the polygon
           map.current.addLayer({
             id: 'polygon',
             type: 'fill',
             source: 'polygon',
             layout: {},
             paint: {
-              'fill-color': '#fbb03b', // Polygon fill color
-              'fill-opacity': 0.4, // Polygon fill opacity
+              'fill-color': 'var(--iq-warning)',
+              'fill-opacity': 0.4,
             },
           });
 
-          // Add a black outline around the polygon
           map.current.addLayer({
             id: 'polygon-outline',
             type: 'line',
             source: 'polygon',
             layout: {},
             paint: {
-              'line-color': '#fbb03b',
+              'line-color': 'var(--iq-warning)',
               'line-width': 1,
             },
           });
@@ -263,7 +268,7 @@ export function AddNewLocationModal({
           });
           map.current.on('draw.render', () => {
             const features = polygon;
-            console.log(features);
+
             if (features.length) {
               drawControl.changeMode('direct_select', {
                 featureId: features[0].id,
@@ -274,7 +279,7 @@ export function AddNewLocationModal({
       }
       map.current.on('draw.create', (e) => updateArea(e, map));
       map.current.on('draw.delete', (e) => updateArea(e, map));
-      map.current.on('draw.update', (e) => updateArea(e, map));
+      map.current.on('draw.update', (e) => updateArea(e, map, true));
       map.current.on('draw.modechange', () => {
         map.current.on('mousemove', (e) => updateArea(e, map));
       });
@@ -294,11 +299,16 @@ export function AddNewLocationModal({
         title={`${(isEditOpen && 'Edit current location') || (isAddOpen && 'Add new location')}`}
         isOpened={isAddOpen || isEditOpen}
         onClose={
-          isAddOpen
-            ? () => setAddIsOpen(false)
-            : isEditOpen
-              ? () => setEditIsOpen(false)
-              : ''
+          () => {
+            if (isAddOpen) {
+              setAddIsOpen(false)
+            }
+            if (isEditOpen) {
+              setEditIsOpen(false)
+            }
+            setMapMessage(INITIAL_MAP_MSG);
+            setIsValidPolygon(false);
+          }
         }
         onApply={handleModalSubmit}
         footerActions={[

@@ -1,13 +1,10 @@
-import { Message, Modal, Span, Table } from '@iqueue/ui-kit';
-import { useContext, useEffect, useState } from 'react';
-import { LocationContext } from '../context/locationContext.jsx';
-import {
-  generateObjectWithValues,
-  minimizeNumbersOfCoords,
-} from './helper/functions.js';
+import {Message, Modal, Span, Table} from '@iqueue/ui-kit';
+import {useContext, useEffect, useState} from 'react';
+import {LocationContext} from '../context/locationContext.jsx';
+import {generateObjectWithValues, minimizeNumbersOfCoords,} from './helper/functions.js';
 
-export function ShowMoreInfoModal({ isOpen, setIsOpen, id }) {
-  const { locations } = useContext(LocationContext);
+export function ShowMoreInfoModal({isOpen, setIsOpen, id}) {
+  const {locations} = useContext(LocationContext);
   const [currentLocation, setCurrentLocation] = useState([]);
   const schema = [
     {
@@ -51,18 +48,18 @@ export function ShowMoreInfoModal({ isOpen, setIsOpen, id }) {
         'Buffer coordinates',
       ];
       const values = [
-        current.location_name,
-        current.country,
-        current.city,
+        current?.location_name,
+        current?.country,
+        current?.city,
         current?.features.at(-1).properties?.short_code || 'Unknown',
         JSON.stringify(
           minimizeNumbersOfCoords(
-            current.polygon?.[0].geometry.coordinates?.[0]
+            current?.polygon?.[0].geometry.coordinates?.[0]
           )
         ),
         JSON.stringify(
           minimizeNumbersOfCoords(
-            current.bufferPolygon?.[0].geometry.coordinates?.[0]
+            current?.bufferPolygon?.[0].geometry.coordinates?.[0]
           )
         ),
       ];
@@ -94,7 +91,7 @@ export function ShowMoreInfoModal({ isOpen, setIsOpen, id }) {
           minWidth={'30rem'}
           schema={schema}
           entries={currentLocation || entries}
-          style={{ margin: '0.5rem' }}
+          style={{margin: '0.5rem'}}
         />
       </Modal>
     </>
