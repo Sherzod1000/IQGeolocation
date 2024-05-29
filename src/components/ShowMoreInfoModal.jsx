@@ -38,7 +38,6 @@ export function ShowMoreInfoModal({isOpen, setIsOpen, id}) {
           'Some error occurred, while finding the current location !'
         );
       }
-      console.log(current);
       const keys = [
         'Location name',
         'Country',

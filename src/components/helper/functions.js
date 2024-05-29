@@ -1,12 +1,12 @@
 export function calculateCentroid(coords) {
   const n = coords.length;
-  const { x, y } = coords.reduce(
-    ({ x, y }, coord) => {
+  const {x, y} = coords.reduce(
+    ({x, y}, coord) => {
       x += coord[0];
       y += coord[1];
-      return { x, y };
+      return {x, y};
     },
-    { x: 0, y: 0 }
+    {x: 0, y: 0}
   );
   return [x / n, y / n];
 }
@@ -19,7 +19,7 @@ export function getLocations() {
   return JSON.parse(localStorage.getItem('locations') || '[]');
 }
 
-import { idSet } from './constants.js';
+import {idSet} from './constants.js';
 
 export function getRandomId() {
   let id = '';
@@ -62,14 +62,14 @@ export function minimizeNumbersOfCoords(coords) {
 }
 
 export function validateEmptySpaces(ref) {
-  ref.current.value = ref.current.value.replace(/(\S)\s+(\S)/g, '$1 $2'); // Validate empty spaces
+  ref.current.value = ref.current.value.replace(/(\S)\s+(\S)/g, '$1 $2').trimStart() // Validate empty spaces
 }
 
 export function locationExist(locations, ref, isEdit, current_location_name) {
   let result = null;
   if (isEdit) {
     const filteredLocations = locations.filter(
-      ({ location_name }) => location_name !== current_location_name
+      ({location_name}) => location_name !== current_location_name
     );
     result = findLocation(filteredLocations, ref);
   } else {
@@ -80,7 +80,7 @@ export function locationExist(locations, ref, isEdit, current_location_name) {
 
 export function findLocation(locations, ref) {
   return locations.find(
-    ({ location_name }) =>
+    ({location_name}) =>
       location_name.toLowerCase() === ref.current.value.toLowerCase().trim()
   );
 }

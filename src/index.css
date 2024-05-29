@@ -136,3 +136,11 @@
 .overflow-x-scroll {
     overflow-x: scroll !important;
 }
+
+.underline-none {
+    text-decoration: none;
+}
+
+.color-inherit {
+    color: inherit !important;
+}

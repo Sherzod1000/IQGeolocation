@@ -53,14 +53,17 @@ export function AddNewLocationModal({
     }
   });
 
-  function updateArea(e, map, isDelete) {
-    console.log(e);
+  function updateArea(e, map) {
+    if (isEditOpen) {
+      if (drawControl?.getAll?.()?.features?.length) {
+        setPolygon(drawControl.getAll().features);
+      }
+    }
     if (e.type === 'draw.delete') {
       setBufferPolygon([]);
       setPolygon([]);
       setMapMessage(INITIAL_MAP_MSG);
       if (map.current) {
-        console.log("Remove buffer", map.current);
         map.current.removeLayer('buffer');
       }
     }
@@ -141,6 +144,7 @@ export function AddNewLocationModal({
   }
 
   async function handleModalSubmit() {
+    console.log("Second worked !")
     resetModal();
     const centroidArea = calculateCentroid(polygon[0].geometry.coordinates[0]);
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${centroidArea[0]},${centroidArea[1]}.json?access_token=${map_token}`;
@@ -161,6 +165,7 @@ export function AddNewLocationModal({
       });
 
       if (isEditOpen) {
+        console.log("Edit is submitted")
         const foundObject = locations.find(({id}) => id === data.id);
         foundObject.location_name = locationRef.current.value;
         foundObject.country =
@@ -236,7 +241,6 @@ export function AddNewLocationModal({
         setIsValidPolygon(true);
         setMapMessage(SUCCESS_ACCEPT_MSG);
         map.current.on('load', () => {
-          // Add the polygon as a source
           map.current.addSource('polygon', {
             type: 'geojson',
             data: data.polygon?.[0],
@@ -279,7 +283,7 @@ export function AddNewLocationModal({
       }
       map.current.on('draw.create', (e) => updateArea(e, map));
       map.current.on('draw.delete', (e) => updateArea(e, map));
-      map.current.on('draw.update', (e) => updateArea(e, map, true));
+      map.current.on('draw.update', (e) => updateArea(e, map));
       map.current.on('draw.modechange', () => {
         map.current.on('mousemove', (e) => updateArea(e, map));
       });
@@ -304,6 +308,7 @@ export function AddNewLocationModal({
               setAddIsOpen(false)
             }
             if (isEditOpen) {
+              console.log("First worked !")
               setEditIsOpen(false)
             }
             setMapMessage(INITIAL_MAP_MSG);
