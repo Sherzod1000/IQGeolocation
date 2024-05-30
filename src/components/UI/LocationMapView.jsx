@@ -1,10 +1,14 @@
 import mapboxgl from "mapbox-gl";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { LocationContext } from "../../context/locationContext.jsx";
 import { calculateBounds, calculateCentroid } from "../helper/functions.js";
 
 export function LocationMapView() {
   const { locations } = useContext(LocationContext);
+  const [userLocation, setUserLocation] = useState({
+    longitude: 69.284599,
+    latitude: 41.34557,
+  });
   const map = useRef(null);
   const navigationControl = new mapboxgl.NavigationControl();
   const geolocationControl = new mapboxgl.GeolocateControl({
@@ -18,12 +22,20 @@ export function LocationMapView() {
   const scaleControl = new mapboxgl.ScaleControl();
 
   useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords: { latitude, longitude } }) => {
+        setUserLocation(() => ({ latitude, longitude }));
+      },
+      (err) => {
+        console.log(err);
+      },
+    );
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     map.current = new mapboxgl.Map({
       container: "map",
       style: "mapbox://styles/mapbox/dark-v11",
-      zoom: 3,
-      center: [61, 45],
+      zoom: 12,
+      center: [userLocation.longitude, userLocation.latitude],
     });
     map.current.addControl(navigationControl, "top-right");
     map.current.addControl(geolocationControl, "top-right");
