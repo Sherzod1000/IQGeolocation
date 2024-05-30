@@ -38,7 +38,9 @@ export function AddNewLocationModal({
     longitude: 69.284599,
   });
   const [polygon, setPolygon] = useState([]);
+  const [editPolygon, setEditPolygon] = useState([]);
   const [bufferPolygon, setBufferPolygon] = useState([]);
+  const [editBufferPolygon, setEditBufferPolygon] = useState([]);
   const map = useRef(null);
   const drawControl = new MapboxDraw({
     displayControlsDefault: false,
@@ -60,12 +62,17 @@ export function AddNewLocationModal({
   });
 
   function updateArea(e, map) {
+    console.log("Polygon before submit: ", polygon);
+    console.log("IsEditOpen: ", isEditOpen);
+    console.log("IsAddOpen: ", isAddOpen);
+    console.log(drawControl.getAll());
     let editedFeature = null;
-    if (isEditOpen) {
-      editedFeature = drawControl.get(currentFeature?.id);
-      setPolygon(() => [editedFeature]);
+    if (isEditOpen && drawControl.getAll().features.length) {
+      editedFeature = drawControl.getAll().features;
+      setEditPolygon(() => [...drawControl.getAll().features]);
     }
     if (e.type === "draw.delete") {
+      console.log("On delete");
       setBufferPolygon([]);
       setPolygon([]);
       setMapMessage(INITIAL_MAP_MSG);
@@ -82,14 +89,20 @@ export function AddNewLocationModal({
       differ = turf.difference(buffer, drawControl.getAll().features[0]);
     }
     if (isEditOpen && editedFeature) {
-      buffer = turf.buffer(editedFeature, 200, {
+      console.log("Edited feature: ", editedFeature);
+      buffer = turf.buffer(editedFeature[0], 200, {
         units: "meters",
       });
-      differ = turf.difference(buffer, editedFeature);
+      differ = turf.difference(buffer, editedFeature[0]);
     }
 
     if (differ) {
-      setBufferPolygon(() => [differ]);
+      if (isAddOpen) {
+        setBufferPolygon(() => [differ]);
+      }
+      if (isEditOpen) {
+        setEditBufferPolygon(() => [differ]);
+      }
       if (map.current.getSource("buffer")) {
         map.current.getSource("buffer").setData(differ);
       } else {
@@ -165,7 +178,21 @@ export function AddNewLocationModal({
 
   async function handleModalSubmit() {
     resetModal();
-    const centroidArea = calculateCentroid(polygon[0].geometry.coordinates[0]);
+    let centroidArea = null;
+    if (isAddOpen) {
+      centroidArea = calculateCentroid(polygon[0].geometry.coordinates[0]);
+    }
+
+    if (isEditOpen) {
+      console.log("Edit Polygon: ", editPolygon);
+      if (editPolygon.length) {
+        centroidArea = calculateCentroid(
+          editPolygon[0].geometry.coordinates[0],
+        );
+      } else {
+        centroidArea = calculateCentroid(polygon[0].geometry.coordinates[0]);
+      }
+    }
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${centroidArea[0]},${centroidArea[1]}.json?access_token=${map_token}`;
 
     const responseGeoDecode = await axios.get(url);
@@ -184,13 +211,8 @@ export function AddNewLocationModal({
       });
 
       if (isEditOpen) {
-        console.log("Edit is submitted");
-        console.log("This is the polygon before submitting: ", polygon);
-        console.log(
-          "This is the buffer polygon before submitting: ",
-          bufferPolygon,
-        );
-
+        console.log("location ref: ", locationRef.current.value);
+        console.log("Polygon after submit:", polygon);
         const foundObject = locations.find(({ id }) => id === data.id);
         foundObject.location_name = locationRef.current.value;
         foundObject.country =
@@ -198,8 +220,8 @@ export function AddNewLocationModal({
         foundObject.city =
           responseGeoDecode.data.features.at(-2).text || "Unknown";
         foundObject.features = responseGeoDecode.data.features;
-        foundObject.polygon = polygon;
-        foundObject.bufferPolygon = bufferPolygon;
+        foundObject.polygon = editPolygon;
+        foundObject.bufferPolygon = editBufferPolygon;
         setLocations(() => [...locations]);
       } else {
         const newData = {
@@ -255,20 +277,20 @@ export function AddNewLocationModal({
 
       if (isEditOpen) {
         if (map.current) {
-          const bbox = turf.bbox(data.polygon[0]);
+          const bbox = turf.bbox(data?.polygon?.[0]);
           map.current.fitBounds(bbox, {
             padding: 100,
             animate: false,
           });
         }
 
-        setPolygon(data.polygon);
+        setPolygon(data?.polygon);
         setIsValidPolygon(true);
         setMapMessage(SUCCESS_ACCEPT_MSG);
         map.current.on("load", () => {
           map.current.addSource("polygon", {
             type: "geojson",
-            data: data.polygon?.[0],
+            data: data?.polygon?.[0],
           });
 
           map.current.addLayer({
