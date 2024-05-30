@@ -22,7 +22,7 @@ function App() {
         nav={[
           {
             divider: true,
-            title: "Geolocation",
+            title: "Geolocation board",
           },
           {
             key: "home",

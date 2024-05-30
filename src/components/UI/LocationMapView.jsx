@@ -48,7 +48,7 @@ export function LocationMapView() {
         layout: {},
         paint: {
           "fill-color": "#0f0",
-          "fill-opacity": 0.14,
+          "fill-opacity": 0.1,
         },
       });
       map.current.addLayer({
@@ -58,7 +58,8 @@ export function LocationMapView() {
         layout: {},
         paint: {
           "line-color": "#0f0",
-          "fill-opacity": 0.8,
+          "fill-opacity": 0.7,
+          "line-dasharray": [3, 2],
         },
       });
       polygons.features.forEach(function (feature) {
