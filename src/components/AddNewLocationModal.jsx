@@ -27,6 +27,7 @@ export function AddNewLocationModal({
   const [isValidPolygon, setIsValidPolygon] = useState(false);
   const [isValidLocationName, setIsValidLocationName] = useState(true);
   const [locationNameErrMsg, setLocationNameErrMsg] = useState('');
+  const [currentFeature, setCurrentFeature] = useState(null);
   const [userLocation, setUserLocation] = useState({
     latitude: 41.34557,
     longitude: 69.284599,
@@ -54,10 +55,10 @@ export function AddNewLocationModal({
   });
 
   function updateArea(e, map) {
+    let editedFeature = null;
     if (isEditOpen) {
-      if (drawControl?.getAll?.()?.features?.length) {
-        setPolygon(drawControl.getAll().features);
-      }
+      editedFeature = drawControl.get(currentFeature?.id);
+      setPolygon(() => [editedFeature]);
     }
     if (e.type === 'draw.delete') {
       setBufferPolygon([]);
@@ -67,10 +68,10 @@ export function AddNewLocationModal({
         map.current.removeLayer('buffer');
       }
     }
-    const buffer = turf.buffer(drawControl.getAll().features[0], 200, {
+    const buffer = turf.buffer(isAddOpen && drawControl.getAll().features[0] || isEditOpen && editedFeature, 200, {
       units: 'meters',
     });
-    const differ = turf.difference(buffer, drawControl.getAll().features[0]);
+    const differ = turf.difference(buffer, isAddOpen && drawControl.getAll().features[0] || isEditOpen && editedFeature);
     setBufferPolygon(() => [differ]);
     if (map.current.getSource('buffer')) {
       map.current.getSource('buffer').setData(differ);
@@ -144,7 +145,6 @@ export function AddNewLocationModal({
   }
 
   async function handleModalSubmit() {
-    console.log("Second worked !")
     resetModal();
     const centroidArea = calculateCentroid(polygon[0].geometry.coordinates[0]);
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${centroidArea[0]},${centroidArea[1]}.json?access_token=${map_token}`;
@@ -166,6 +166,9 @@ export function AddNewLocationModal({
 
       if (isEditOpen) {
         console.log("Edit is submitted")
+        console.log("This is the polygon before submitting: ", polygon);
+        console.log("This is the buffer polygon before submitting: ", bufferPolygon);
+
         const foundObject = locations.find(({id}) => id === data.id);
         foundObject.location_name = locationRef.current.value;
         foundObject.country =
@@ -175,7 +178,7 @@ export function AddNewLocationModal({
         foundObject.features = responseGeoDecode.data.features;
         foundObject.polygon = polygon;
         foundObject.bufferPolygon = bufferPolygon;
-        setLocations([...locations]);
+        setLocations(() => [...locations]);
       } else {
         const newData = {
           id: getRandomId(),
@@ -272,7 +275,6 @@ export function AddNewLocationModal({
           });
           map.current.on('draw.render', () => {
             const features = polygon;
-
             if (features.length) {
               drawControl.changeMode('direct_select', {
                 featureId: features[0].id,
@@ -284,6 +286,13 @@ export function AddNewLocationModal({
       map.current.on('draw.create', (e) => updateArea(e, map));
       map.current.on('draw.delete', (e) => updateArea(e, map));
       map.current.on('draw.update', (e) => updateArea(e, map));
+      map.current.on('draw.selectionchange', (e) => {
+        if (e.features.length) {
+          setCurrentFeature(e.features[0]);
+        } else {
+          setCurrentFeature(null);
+        }
+      })
       map.current.on('draw.modechange', () => {
         map.current.on('mousemove', (e) => updateArea(e, map));
       });
@@ -308,7 +317,6 @@ export function AddNewLocationModal({
               setAddIsOpen(false)
             }
             if (isEditOpen) {
-              console.log("First worked !")
               setEditIsOpen(false)
             }
             setMapMessage(INITIAL_MAP_MSG);

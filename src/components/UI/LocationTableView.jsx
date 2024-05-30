@@ -1,68 +1,66 @@
-import {Button, Row, Table,} from "@iqueue/ui-kit";
-import {filterByColumn, handleModalActions} from "../../helper/functions.js";
-import {AddNewLocationModal} from "../AddNewLocationModal.jsx";
-import {DeleteLocationModal} from "../DeleteLocationModal.jsx";
-import {ShowMoreInfoModal} from "../ShowMoreInfoModal.jsx";
-import {useContext, useRef, useState} from "react";
-import {LocationContext} from "../../context/locationContext.jsx";
-import {useNavigate} from "react-router-dom";
+import { Button, Row, Table } from "@iqueue/ui-kit";
+import { filterByColumn, handleModalActions } from "../../helper/functions.js";
+import { AddNewLocationModal } from "../AddNewLocationModal.jsx";
+import { DeleteLocationModal } from "../DeleteLocationModal.jsx";
+import { ShowMoreInfoModal } from "../ShowMoreInfoModal.jsx";
+import { useContext, useRef, useState } from "react";
+import { LocationContext } from "../../context/locationContext.jsx";
 
 export function LocationTableView() {
-  const tableRef = useRef()
+  const tableRef = useRef();
   const [addNewLocationModal, setAddNewLocationModal] = useState(false);
   const [editLocationModal, setEditLocationModal] = useState(false);
   const [deleteLocationModal, setDeleteLocationModal] = useState(false);
   const [showMoreLocationModal, setShowMoreLocationModal] = useState(false);
-  const {locations} = useContext(LocationContext);
+  const { locations } = useContext(LocationContext);
   const [currentLocation, setCurrentLocation] = useState({});
-  const navigate = useNavigate();
   const schema = [
     {
-      key: 'location_name',
-      title: 'Location Name',
+      key: "location_name",
+      title: "Location Name",
       // width: '10rem',
-      filter: filterByColumn('location_name'),
+      filter: filterByColumn("location_name"),
     },
     {
-      key: 'country',
-      title: 'Country',
-      filter: filterByColumn('country'),
+      key: "country",
+      title: "Country",
+      filter: filterByColumn("country"),
     },
     {
-      key: 'city',
-      title: 'City',
-      filter: filterByColumn('city'),
+      key: "city",
+      title: "City",
+      filter: filterByColumn("city"),
     },
     {
-      key: 'actions',
-      title: 'Actions',
-      scope: 'table',
+      key: "actions",
+      title: "Actions",
+      scope: "table",
       render: (key, value) => (
         <>
-          <div className={'flex gap-1'}>
+          <div className={"flex gap-1"}>
             <Button
-              className={'grow text-nowrap'}
+              className={"grow text-nowrap"}
               caution
               id={"editLocationModal"}
-              icon={'edit'}
+              icon={"edit"}
               onClick={() =>
                 handleModalActions(
                   setCurrentLocation,
                   setEditLocationModal,
-                  value
+                  value,
                 )
               }
             ></Button>
             <Button
-              className={'grow text-nowrap'}
-              id={'deleteLocationModal'}
+              className={"grow text-nowrap"}
+              id={"deleteLocationModal"}
               danger
-              icon={'delete'}
+              icon={"delete"}
               onClick={() =>
                 handleModalActions(
                   setCurrentLocation,
                   setDeleteLocationModal,
-                  value
+                  value,
                 )
               }
             ></Button>
@@ -73,34 +71,35 @@ export function LocationTableView() {
   ];
   return (
     <div>
-      <div className={'wrapper'}>
+      <div className={"wrapper"}>
         <Table
           ref={tableRef}
-          className={'overflow-x-scroll'}
+          className={"overflow-x-scroll"}
           schema={schema}
           entries={locations.length ? locations : []}
           onRowClick={(value, event) => {
-            if (event.target.id !== 'editLocationModal' && event.target.id !== 'deleteLocationModal') {
+            if (
+              event.target.id !== "editLocationModal" &&
+              event.target.id !== "deleteLocationModal"
+            ) {
               handleModalActions(
                 setCurrentLocation,
                 setShowMoreLocationModal,
-                value
-              )
+                value,
+              );
             }
           }}
-          minWidth={'60rem'}
+          minWidth={"60rem"}
           indexable={true}
         />
-        <Row justify={'end'} spacing={20}>
-          <Button secondary onClick={() => navigate('/map-view')}>
-            Show locations
-          </Button>
+        <Row justify={"end"} spacing={20}>
           <Button
-            className={'align-end'}
+            className={"align-end"}
             primary
             onClick={() => {
-              setAddNewLocationModal((prev) => !prev)
-            }}>
+              setAddNewLocationModal((prev) => !prev);
+            }}
+          >
             Add new location
           </Button>
         </Row>
@@ -127,5 +126,5 @@ export function LocationTableView() {
         id={currentLocation?.id}
       />
     </div>
-  )
+  );
 }

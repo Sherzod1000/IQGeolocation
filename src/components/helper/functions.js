@@ -1,28 +1,28 @@
 export function calculateCentroid(coords) {
   const n = coords.length;
-  const {x, y} = coords.reduce(
-    ({x, y}, coord) => {
+  const { x, y } = coords.reduce(
+    ({ x, y }, coord) => {
       x += coord[0];
       y += coord[1];
-      return {x, y};
+      return { x, y };
     },
-    {x: 0, y: 0}
+    { x: 0, y: 0 },
   );
   return [x / n, y / n];
 }
 
 export function checkLocationsExist() {
-  return JSON.parse(localStorage.getItem('locations') || '[]').length > 0;
+  return JSON.parse(localStorage.getItem("locations") || "[]").length > 0;
 }
 
 export function getLocations() {
-  return JSON.parse(localStorage.getItem('locations') || '[]');
+  return JSON.parse(localStorage.getItem("locations") || "[]");
 }
 
-import {idSet} from './constants.js';
+import { idSet } from "./constants.js";
 
 export function getRandomId() {
-  let id = '';
+  let id = "";
   while (true) {
     id = window.crypto.randomUUID();
     if (!idSet.has(id)) {
@@ -62,14 +62,16 @@ export function minimizeNumbersOfCoords(coords) {
 }
 
 export function validateEmptySpaces(ref) {
-  ref.current.value = ref.current.value.replace(/(\S)\s+(\S)/g, '$1 $2').trimStart() // Validate empty spaces
+  ref.current.value = ref.current.value
+    .replace(/(\S)\s+(\S)/g, "$1 $2")
+    .trimStart(); // Validate empty spaces
 }
 
 export function locationExist(locations, ref, isEdit, current_location_name) {
   let result = null;
   if (isEdit) {
     const filteredLocations = locations.filter(
-      ({location_name}) => location_name !== current_location_name
+      ({ location_name }) => location_name !== current_location_name,
     );
     result = findLocation(filteredLocations, ref);
   } else {
@@ -80,7 +82,28 @@ export function locationExist(locations, ref, isEdit, current_location_name) {
 
 export function findLocation(locations, ref) {
   return locations.find(
-    ({location_name}) =>
-      location_name.toLowerCase() === ref.current.value.toLowerCase().trim()
+    ({ location_name }) =>
+      location_name.toLowerCase() === ref.current.value.toLowerCase().trim(),
   );
+}
+
+export function calculateBounds(coords) {
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+  coords.forEach((coord) => {
+    const lon = coord[0],
+      lat = coord[1];
+    minX = Math.min(minX, lon);
+    minY = Math.min(minY, lat);
+    maxX = Math.max(maxX, lon);
+    maxY = Math.max(maxY, lat);
+  });
+
+  return [
+    [minX, minY],
+    [maxX, maxY],
+  ];
 }
