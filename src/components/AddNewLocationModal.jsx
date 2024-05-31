@@ -32,7 +32,6 @@ export function AddNewLocationModal({
   const [isValidPolygon, setIsValidPolygon] = useState(false);
   const [isValidLocationName, setIsValidLocationName] = useState(true);
   const [locationNameErrMsg, setLocationNameErrMsg] = useState("");
-  const [currentFeature, setCurrentFeature] = useState(null);
   const [userLocation, setUserLocation] = useState({
     latitude: 41.34557,
     longitude: 69.284599,
@@ -77,7 +76,11 @@ export function AddNewLocationModal({
     }
     let buffer = null;
     let differ = null;
-    if (isAddOpen && drawControl.getAll().features.length) {
+    if (
+      isAddOpen &&
+      drawControl.getAll().features.length &&
+      drawControl.getAll().features[0].geometry.coordinates[0].length > 3
+    ) {
       buffer = turf.buffer(drawControl.getAll().features[0], 200, {
         units: "meters",
       });
@@ -189,7 +192,6 @@ export function AddNewLocationModal({
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${centroidArea[0]},${centroidArea[1]}.json?access_token=${map_token}`;
 
     const responseGeoDecode = await axios.get(url);
-    console.log(responseGeoDecode);
     const cancelMsg = Message({
       title: "Loading...",
       type: "loading",
@@ -341,13 +343,7 @@ export function AddNewLocationModal({
       map.current.on("draw.create", (e) => updateArea(e, map));
       map.current.on("draw.delete", (e) => updateArea(e, map));
       map.current.on("draw.update", (e) => updateArea(e, map));
-      map.current.on("draw.selectionchange", (e) => {
-        if (e.features.length) {
-          setCurrentFeature(e.features[0]);
-        } else {
-          setCurrentFeature(null);
-        }
-      });
+      map.current.on("draw.selectionchange", (e) => {});
       map.current.on("draw.modechange", () => {
         map.current.on("mousemove", (e) => updateArea(e, map));
       });
