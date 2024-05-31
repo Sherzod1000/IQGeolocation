@@ -4,6 +4,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import * as turf from "@turf/turf";
 import { useContext, useEffect, useRef, useState } from "react";
 import {
+  ERROR_ONLY_POLGON_MSG,
   INITIAL_MAP_MSG,
   isForcedSubmitUsed,
   map_token,
@@ -61,10 +62,12 @@ export function AddNewLocationModal({
   });
 
   function updateArea(e, map) {
+    const features = drawControl.getAll().features;
+    const featureCoords = features?.[0]?.geometry?.coordinates?.[0];
     let editedFeature = null;
-    if (isEditOpen && drawControl.getAll().features.length) {
-      editedFeature = drawControl.getAll().features;
-      setEditPolygon(() => [...drawControl.getAll().features]);
+    if (isEditOpen && features.length) {
+      editedFeature = features;
+      setEditPolygon(() => [...features]);
     }
     if (e.type === "draw.delete") {
       setBufferPolygon([]);
@@ -77,17 +80,12 @@ export function AddNewLocationModal({
     let buffer = null;
     let differ = null;
     let factor = 0.3;
-    if (
-      isAddOpen &&
-      drawControl.getAll().features.length &&
-      drawControl.getAll().features[0].geometry.coordinates[0].length > 3
-    ) {
-      const bufferSize =
-        Math.sqrt(turf.area(drawControl.getAll().features[0])) * factor;
-      buffer = turf.buffer(drawControl.getAll().features[0], bufferSize, {
+    if (isAddOpen && features?.length && featureCoords?.length > 3) {
+      const bufferSize = Math.sqrt(turf.area(features[0])) * factor;
+      buffer = turf.buffer(features[0], bufferSize, {
         units: "meters",
       });
-      differ = turf.difference(buffer, drawControl.getAll().features[0]);
+      differ = turf.difference(buffer, features[0]);
     }
     if (isEditOpen && editedFeature) {
       const bufferSize = Math.sqrt(turf.area(editedFeature[0])) * factor;
@@ -123,20 +121,17 @@ export function AddNewLocationModal({
       }
     }
 
-    if (
-      drawControl?.getAll()?.features?.length &&
-      drawControl?.getAll().features[0].geometry.coordinates[0].length > 2
-    ) {
+    if (features?.length && featureCoords.length > 2) {
       const isPolygons = drawControl
         .getAll()
         .features.every((feature) => feature.geometry.type === "Polygon");
       if (isPolygons) {
         setIsValidPolygon(true);
         setMapMessage(SUCCESS_ACCEPT_MSG);
-        setPolygon(() => [...drawControl.getAll().features]);
+        setPolygon(() => [...features]);
       } else {
         setIsValidPolygon(false);
-        setMapMessage("Only polygon are accepted, please provide polygon !");
+        setMapMessage(ERROR_ONLY_POLGON_MSG);
       }
     }
   }
@@ -347,7 +342,6 @@ export function AddNewLocationModal({
       map.current.on("draw.create", (e) => updateArea(e, map));
       map.current.on("draw.delete", (e) => updateArea(e, map));
       map.current.on("draw.update", (e) => updateArea(e, map));
-      map.current.on("draw.selectionchange", (e) => {});
       map.current.on("draw.modechange", () => {
         map.current.on("mousemove", (e) => updateArea(e, map));
       });
