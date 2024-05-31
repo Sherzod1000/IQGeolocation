@@ -178,7 +178,6 @@ export function AddNewLocationModal({
     }
 
     if (isEditOpen) {
-      console.log("Edit Polygon: ", editPolygon);
       if (editPolygon.length) {
         centroidArea = calculateCentroid(
           editPolygon[0].geometry.coordinates[0],
@@ -190,11 +189,31 @@ export function AddNewLocationModal({
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${centroidArea[0]},${centroidArea[1]}.json?access_token=${map_token}`;
 
     const responseGeoDecode = await axios.get(url);
+    console.log(responseGeoDecode);
     const cancelMsg = Message({
       title: "Loading...",
       type: "loading",
       timeout: 10000,
     });
+
+    if (!responseGeoDecode.data.features.length) {
+      cancelMsg();
+      Message({
+        title: "Something went wrong !",
+        subtitle: "It may be due to wrong polygon provided !",
+        type: "error",
+        timeout: 3000,
+      });
+      setTimeout(() => {
+        Message({
+          title: "Attention !",
+          subtitle: "Polygon cannot be on the surface of water !",
+          type: "info",
+          timeout: 3000,
+        });
+      }, 3000);
+      return;
+    }
 
     if (responseGeoDecode.status === 200) {
       cancelMsg();
