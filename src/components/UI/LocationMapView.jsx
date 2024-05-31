@@ -6,9 +6,10 @@ import { calculateBounds, calculateCentroid } from "../helper/functions.js";
 export function LocationMapView() {
   const { locations } = useContext(LocationContext);
   const [userLocation, setUserLocation] = useState({
-    longitude: 69.284599,
-    latitude: 41.34557,
+    longitude: 69.284599, // default longitude,
+    latitude: 41.34557, // default latitude,
   });
+
   const map = useRef(null);
   const navigationControl = new mapboxgl.NavigationControl();
   const geolocationControl = new mapboxgl.GeolocateControl({
@@ -18,6 +19,7 @@ export function LocationMapView() {
     trackUserLocation: true,
     showUserLocation: true,
   });
+
   const fullscreenControl = new mapboxgl.FullscreenControl();
   const scaleControl = new mapboxgl.ScaleControl();
 

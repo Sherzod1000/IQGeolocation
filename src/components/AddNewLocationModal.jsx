@@ -1,4 +1,4 @@
-import { Input, Message, Modal } from "@iqueue/ui-kit";
+import { Col, Input, Message, Modal, Row } from "@iqueue/ui-kit";
 import mapboxgl from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import * as turf from "@turf/turf";
@@ -382,32 +382,38 @@ export function AddNewLocationModal({
           },
         ]}
       >
-        <div className={"pb-4 w-full"}>
-          <div className={"relative"}>
-            <Input
-              autoComplete={"off"}
-              ref={locationRef}
-              className={`w-full`}
-              placeholder={
-                locationNameErrMsg ? locationNameErrMsg : "Enter location name"
-              }
-              required
-              checkValidity={() => isValidLocationName}
-              size={12}
-              name={"location_name"}
-              value={isEditOpen ? data.location_name : ""}
-            />
-          </div>
+        <Row>
+          <Col className={"pb-4"} vertical={true}>
+            <Row>
+              <Input
+                autoComplete={"off"}
+                ref={locationRef}
+                className={`w-full`}
+                placeholder={
+                  locationNameErrMsg
+                    ? locationNameErrMsg
+                    : "Enter location name"
+                }
+                required
+                checkValidity={() => isValidLocationName}
+                size={12}
+                name={"location_name"}
+                value={isEditOpen ? data.location_name : ""}
+              />
+            </Row>
 
-          <div>
-            <small
-              className={`${polygon.length && isValidPolygon ? "text-success" : "text-danger"}`}
-            >
-              {mapMessage}
-            </small>
-            <div ref={mapContainer} className={"mapbox"}></div>
-          </div>
-        </div>
+            <Row>
+              <Col>
+                <small
+                  className={`${polygon.length && isValidPolygon ? "text-success" : "text-danger"}`}
+                >
+                  {mapMessage}
+                </small>
+                <div ref={mapContainer} className={"mapbox"}></div>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
       </Modal>
     </>
   );

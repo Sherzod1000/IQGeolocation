@@ -1,4 +1,4 @@
-import { Button, Row, Table } from "@iqueue/ui-kit";
+import { Button, Col, Layout, Row, Table } from "@iqueue/ui-kit";
 import { filterByColumn, handleModalActions } from "../../helper/functions.js";
 import { AddNewLocationModal } from "../AddNewLocationModal.jsx";
 import { DeleteLocationModal } from "../DeleteLocationModal.jsx";
@@ -70,40 +70,44 @@ export function LocationTableView() {
     },
   ];
   return (
-    <div>
-      <div className={"wrapper"}>
-        <Table
-          ref={tableRef}
-          className={"overflow-x-scroll"}
-          schema={schema}
-          entries={locations.length ? locations : []}
-          onRowClick={(value, event) => {
-            if (
-              event.target.id !== "editLocationModal" &&
-              event.target.id !== "deleteLocationModal"
-            ) {
-              handleModalActions(
-                setCurrentLocation,
-                setShowMoreLocationModal,
-                value,
-              );
-            }
-          }}
-          minWidth={"60rem"}
-          indexable={true}
-        />
-        <Row justify={"end"} spacing={20}>
-          <Button
-            className={"align-end"}
-            primary
-            onClick={() => {
-              setAddNewLocationModal((prev) => !prev);
+    <Row>
+      <Layout vertical={true}>
+        <Col size={12}>
+          <Table
+            ref={tableRef}
+            className={"overflow-x-scroll"}
+            schema={schema}
+            entries={locations.length ? locations : []}
+            onRowClick={(value, event) => {
+              if (
+                event.target.id !== "editLocationModal" &&
+                event.target.id !== "deleteLocationModal"
+              ) {
+                handleModalActions(
+                  setCurrentLocation,
+                  setShowMoreLocationModal,
+                  value,
+                );
+              }
             }}
-          >
-            Add new location
-          </Button>
-        </Row>
-      </div>
+            minWidth={"60rem"}
+            indexable={true}
+          />
+        </Col>
+        <Col>
+          <Row justify={"end"} spacing={20}>
+            <Button
+              className={"align-end"}
+              primary
+              onClick={() => {
+                setAddNewLocationModal((prev) => !prev);
+              }}
+            >
+              Add new location
+            </Button>
+          </Row>
+        </Col>
+      </Layout>
       <AddNewLocationModal
         isAdd={{
           isOpen: addNewLocationModal,
@@ -125,6 +129,6 @@ export function LocationTableView() {
         setIsOpen={setShowMoreLocationModal}
         id={currentLocation?.id}
       />
-    </div>
+    </Row>
   );
 }
