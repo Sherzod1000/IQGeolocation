@@ -76,18 +76,22 @@ export function AddNewLocationModal({
     }
     let buffer = null;
     let differ = null;
+    let factor = 0.3;
     if (
       isAddOpen &&
       drawControl.getAll().features.length &&
       drawControl.getAll().features[0].geometry.coordinates[0].length > 3
     ) {
-      buffer = turf.buffer(drawControl.getAll().features[0], 200, {
+      const bufferSize =
+        Math.sqrt(turf.area(drawControl.getAll().features[0])) * factor;
+      buffer = turf.buffer(drawControl.getAll().features[0], bufferSize, {
         units: "meters",
       });
       differ = turf.difference(buffer, drawControl.getAll().features[0]);
     }
     if (isEditOpen && editedFeature) {
-      buffer = turf.buffer(editedFeature[0], 200, {
+      const bufferSize = Math.sqrt(turf.area(editedFeature[0])) * factor;
+      buffer = turf.buffer(editedFeature[0], bufferSize, {
         units: "meters",
       });
       differ = turf.difference(buffer, editedFeature[0]);
