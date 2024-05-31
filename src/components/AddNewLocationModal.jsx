@@ -62,17 +62,12 @@ export function AddNewLocationModal({
   });
 
   function updateArea(e, map) {
-    console.log("Polygon before submit: ", polygon);
-    console.log("IsEditOpen: ", isEditOpen);
-    console.log("IsAddOpen: ", isAddOpen);
-    console.log(drawControl.getAll());
     let editedFeature = null;
     if (isEditOpen && drawControl.getAll().features.length) {
       editedFeature = drawControl.getAll().features;
       setEditPolygon(() => [...drawControl.getAll().features]);
     }
     if (e.type === "draw.delete") {
-      console.log("On delete");
       setBufferPolygon([]);
       setPolygon([]);
       setMapMessage(INITIAL_MAP_MSG);
@@ -89,7 +84,6 @@ export function AddNewLocationModal({
       differ = turf.difference(buffer, drawControl.getAll().features[0]);
     }
     if (isEditOpen && editedFeature) {
-      console.log("Edited feature: ", editedFeature);
       buffer = turf.buffer(editedFeature[0], 200, {
         units: "meters",
       });
@@ -211,8 +205,6 @@ export function AddNewLocationModal({
       });
 
       if (isEditOpen) {
-        console.log("location ref: ", locationRef.current.value);
-        console.log("Polygon after submit:", polygon);
         const foundObject = locations.find(({ id }) => id === data.id);
         foundObject.location_name = locationRef.current.value;
         foundObject.country =

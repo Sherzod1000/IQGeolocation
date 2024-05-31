@@ -53,7 +53,6 @@ export function LocationMapView() {
         type: "geojson",
         data: polygons,
       });
-
       // Add the polygon layer
       map.current.addLayer({
         id: `polygons`,
@@ -77,15 +76,21 @@ export function LocationMapView() {
         },
       });
       polygons.features.forEach(function (feature) {
+        const foundLocation = locations.find(
+          (loc) => loc?.polygon?.[0]?.id === feature.id,
+        );
         const coordinates = feature.geometry.coordinates[0];
         const centroid = calculateCentroid(coordinates);
         const bounds = calculateBounds(coordinates);
         const popup = new mapboxgl.Popup({ offset: 50 })
           .setHTML(
-            `<div class="popup">${
-              locations.find((loc) => loc?.polygon?.[0]?.id === feature.id)
-                ?.location_name || "Unknown"
-            }</div>`,
+            `<div class="popup">
+               <h3 class="popup-text">${foundLocation?.location_name || "Unknown"}</h3>
+                <ul class="popup-list">
+                   <li class="popup-item"><span class="text-bold">Country:</span> ${foundLocation?.country || "Unknown"}</li>
+                   <li class="popup-item"><span class="text-bold">City:</span> ${foundLocation?.city || "Unknown"}</li>
+                </ul>
+             </div>`,
           )
           .setLngLat(centroid)
           .addTo(map.current);
