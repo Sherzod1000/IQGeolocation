@@ -342,8 +342,12 @@ export function AddNewLocationModal({
       map.current.on("draw.create", (e) => updateArea(e, map));
       map.current.on("draw.delete", (e) => updateArea(e, map));
       map.current.on("draw.update", (e) => updateArea(e, map));
-      map.current.on("draw.modechange", () => {
-        map.current.on("mousemove", (e) => updateArea(e, map));
+      map.current.on("draw.modechange", (e) => {
+        if (e.mode === "direct_select") {
+          map.current.on("mousemove", (e) => updateArea(e, map));
+        } else {
+          map.current.off("mousemove", (e) => updateArea(e, map));
+        }
       });
       controlSubmitButton();
     }
