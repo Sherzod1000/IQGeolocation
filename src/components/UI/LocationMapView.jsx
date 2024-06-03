@@ -2,6 +2,7 @@ import mapboxgl from "mapbox-gl";
 import { useContext, useEffect, useRef, useState } from "react";
 import { LocationContext } from "../../context/locationContext.jsx";
 import { calculateBounds, calculateCentroid } from "../helper/functions.js";
+import axios from "axios";
 
 export function LocationMapView() {
   const { locations } = useContext(LocationContext);
@@ -22,6 +23,7 @@ export function LocationMapView() {
 
   const fullscreenControl = new mapboxgl.FullscreenControl();
   const scaleControl = new mapboxgl.ScaleControl();
+  const [polygon, setPolygon] = useState(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -49,7 +51,7 @@ export function LocationMapView() {
         features: [...locations.map((location) => location.polygon[0])],
       };
       console.log(polygons);
-      map.current.addSource(`polygons-source`, {
+      map.current.addSource(`polygons-sourced`, {
         type: "geojson",
         data: polygons,
       });
@@ -57,7 +59,7 @@ export function LocationMapView() {
       map.current.addLayer({
         id: `polygons`,
         type: "fill",
-        source: `polygons-source`,
+        source: `polygons-sourced`,
         layout: {},
         paint: {
           "fill-color": "#0f0",
@@ -67,7 +69,7 @@ export function LocationMapView() {
       map.current.addLayer({
         id: `polygons-outline`,
         type: "line",
-        source: `polygons-source`,
+        source: `polygons-sourced`,
         layout: {},
         paint: {
           "line-color": "#0f0",
@@ -75,6 +77,7 @@ export function LocationMapView() {
           "line-dasharray": [3, 2],
         },
       });
+
       polygons.features.forEach(function (feature) {
         const foundLocation = locations.find(
           (loc) => loc?.polygon?.[0]?.id === feature.id,
@@ -105,6 +108,70 @@ export function LocationMapView() {
       });
     });
   }, []);
+  useEffect(() => {
+    if (polygon) {
+      console.log("Polygon:", polygon);
+      map.current.on("load", () => {
+        map.current.addSource("polygon-bordered", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: polygon,
+          },
+        });
 
-  return <div className={"full rounded-md"} id={"map"}></div>;
+        map.current.addLayer({
+          id: "polygon-bordered",
+          type: "fill",
+          source: "polygon-bordered",
+          layout: {},
+          paint: {
+            "fill-color": "#0f0",
+            "fill-opacity": 0.4,
+          },
+        });
+
+        map.current.addLayer({
+          id: "outline",
+          type: "line",
+          source: "polygon-bordered",
+          layout: {},
+          paint: {
+            "line-color": "#00f",
+            "line-width": 2,
+          },
+        });
+      });
+    }
+  }, [polygon]);
+  const fetchCoordinates = async (address) => {
+    try {
+      const response = await axios.get(
+        "https://nominatim.openstreetmap.org/search",
+        {
+          params: {
+            q: address,
+            format: "json",
+            polygon_geojson: 1,
+            addressdetails: 1,
+          },
+        },
+      );
+
+      if (response.data.length > 0) {
+        console.log(response);
+        setPolygon(response.data[0].geojson);
+      }
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+    }
+  };
+  useEffect(() => {
+    fetchCoordinates("Tashkent");
+  }, []);
+  return (
+    <>
+      <div className={"full rounded-md"} id={"map"}></div>
+    </>
+  );
 }

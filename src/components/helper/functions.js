@@ -1,3 +1,6 @@
+import axios from "axios";
+import { idSet } from "./constants.js";
+
 export function calculateCentroid(coords) {
   const n = coords.length;
   const { x, y } = coords.reduce(
@@ -18,8 +21,6 @@ export function checkLocationsExist() {
 export function getLocations() {
   return JSON.parse(localStorage.getItem("locations") || "[]");
 }
-
-import { idSet } from "./constants.js";
 
 export function getRandomId() {
   let id = "";
@@ -106,4 +107,20 @@ export function calculateBounds(coords) {
     [minX, minY],
     [maxX, maxY],
   ];
+}
+
+export async function fetchDataFromOpenStreetMap(address) {
+  const response = await axios.get(
+    "https://nominatim.openstreetmap.org/search",
+    {
+      params: {
+        q: address,
+        format: "json",
+        polygon_geojson: 1,
+        addressdetails: 1,
+      },
+    },
+  );
+
+  return response;
 }

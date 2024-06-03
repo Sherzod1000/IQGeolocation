@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { setIds } from "./components/helper/functions.js";
 import { LocationTableView } from "./components/UI/LocationTableView.jsx";
 import { LocationMapView } from "./components/UI/LocationMapView.jsx";
+import { LocationMarkView } from "./components/UI/LocationMarkView.jsx";
 
 function App() {
   const { setTheme } = useTheme();
@@ -36,6 +37,12 @@ function App() {
             icon: "map",
             title: "All locations",
           },
+          {
+            key: "mark",
+            route: "mark",
+            icon: "edit",
+            title: "Mark location",
+          },
         ]}
       >
         <Router
@@ -43,6 +50,7 @@ function App() {
           routes={{
             home: () => <LocationTableView />,
             map: () => <LocationMapView />,
+            mark: () => <LocationMarkView />,
           }}
         />
       </Window>
