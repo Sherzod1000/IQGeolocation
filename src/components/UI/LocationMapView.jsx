@@ -2,7 +2,6 @@ import mapboxgl from "mapbox-gl";
 import { useContext, useEffect, useRef, useState } from "react";
 import { LocationContext } from "../../context/locationContext.jsx";
 import { calculateBounds, calculateCentroid } from "../helper/functions.js";
-import axios from "axios";
 
 export function LocationMapView() {
   const { locations } = useContext(LocationContext);
@@ -107,67 +106,6 @@ export function LocationMapView() {
         });
       });
     });
-  }, []);
-  useEffect(() => {
-    if (polygon) {
-      console.log("Polygon:", polygon);
-      map.current.on("load", () => {
-        map.current.addSource("polygon-bordered", {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            geometry: polygon,
-          },
-        });
-
-        map.current.addLayer({
-          id: "polygon-bordered",
-          type: "fill",
-          source: "polygon-bordered",
-          layout: {},
-          paint: {
-            "fill-color": "#0f0",
-            "fill-opacity": 0.4,
-          },
-        });
-
-        map.current.addLayer({
-          id: "outline",
-          type: "line",
-          source: "polygon-bordered",
-          layout: {},
-          paint: {
-            "line-color": "#00f",
-            "line-width": 2,
-          },
-        });
-      });
-    }
-  }, [polygon]);
-  const fetchCoordinates = async (address) => {
-    try {
-      const response = await axios.get(
-        "https://nominatim.openstreetmap.org/search",
-        {
-          params: {
-            q: address,
-            format: "json",
-            polygon_geojson: 1,
-            addressdetails: 1,
-          },
-        },
-      );
-
-      if (response.data.length > 0) {
-        console.log(response);
-        setPolygon(response.data[0].geojson);
-      }
-    } catch (error) {
-      console.error("Error fetching coordinates:", error);
-    }
-  };
-  useEffect(() => {
-    fetchCoordinates("Tashkent");
   }, []);
   return (
     <>

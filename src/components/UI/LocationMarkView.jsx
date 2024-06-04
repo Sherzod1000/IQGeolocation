@@ -22,6 +22,106 @@ export function LocationMarkView() {
     });
     map.current.addControl(geoControl, "top-right");
     map.current.addControl(navControl, "top-right");
+    map.current.on("load", () => {
+      map.current.addSource("population", {
+        type: "geojson",
+        data: "https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson",
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
+      });
+
+      map.current.addLayer({
+        id: "clusters",
+        type: "circle",
+        source: "population",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": [
+            "step",
+            ["get", "point_count"],
+            "#99ffa1",
+            100,
+            "#75f1e0",
+            750,
+            "#f28cb1",
+          ],
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            20,
+            100,
+            30,
+            750,
+            40,
+          ],
+        },
+      });
+
+      map.current.addLayer({
+        id: "cluster-count",
+        type: "symbol",
+        source: "population",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+          "text-size": 12,
+        },
+      });
+
+      map.current.addLayer({
+        id: "unclustered-point",
+        type: "circle",
+        source: "population",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": "#11b4da",
+          "circle-radius": 4,
+          "circle-stroke-width": 1,
+          "circle-stroke-color": "#fff",
+        },
+      });
+
+      map.current.on("click", "clusters", (e) => {
+        const features = map.current.queryRenderedFeatures(e.point, {
+          layers: ["clusters"],
+        });
+        const clusterId = features[0].properties.cluster_id;
+        map.current
+          .getSource("population")
+          .getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err) return;
+
+            map.current.easeTo({
+              center: features[0].geometry.coordinates,
+              zoom: zoom,
+            });
+          });
+      });
+
+      map.current.on("click", "unclustered-point", (e) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const mag = e.features[0].properties.mag;
+        const tsunami = e.features[0].properties.tsunami === 1 ? "yes" : "no";
+
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`)
+          .addTo(map.current);
+      });
+
+      map.current.on("mouseenter", "clusters", () => {
+        map.current.getCanvas().style.cursor = "pointer";
+      });
+      map.current.on("mouseleave", "clusters", () => {
+        map.current.getCanvas().style.cursor = "";
+      });
+    });
   }, []);
   useEffect(() => {
     if (!map.current) return;
@@ -35,6 +135,9 @@ export function LocationMarkView() {
         map.current.removeSource("polygon");
       }
       if (map.current.isStyleLoaded()) {
+        console.log("Polygon:", polygon);
+        const point = turf.point([-45, 61]);
+        console.log(point);
         map.current.addSource("polygon", {
           type: "geojson",
           data: {
@@ -65,6 +168,7 @@ export function LocationMarkView() {
             "line-width": 2,
           },
         });
+
         const bbox = turf.bbox(polygon.geojson);
         map.current.fitBounds(bbox, {
           padding: 200,
@@ -78,16 +182,17 @@ export function LocationMarkView() {
   let cancelMsg = null;
 
   function handleAddressChange() {
-    console.log("Changing");
     if (timeout) {
       clearTimeout(timeout);
     }
+
     if (!cancelMsg) {
       cancelMsg = Message({
         type: "loading",
         title: "Loading...",
       });
     }
+
     timeout = setTimeout(() => {
       if (addressRef.current.value.trim().length > 0) {
         console.log(addressRef.current.value);
@@ -123,6 +228,8 @@ export function LocationMarkView() {
             cancelMsg?.();
             cancelMsg = null;
           });
+      } else {
+        cancelMsg?.();
       }
     }, 800);
   }
